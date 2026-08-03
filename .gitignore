@@ -1,0 +1,56 @@
+# ── Rust / Soroban ───────────────────────────────────────────────────────────
+target/
+**/*.rs.bk
+*.pdb
+
+# Soroban writes a ledger snapshot per test run as a debugging aid. Their
+# contents depend on which build profile produced the WASM, so committing them
+# means a diff on every CI run that says nothing about the code.
+test_snapshots/
+
+# ── Node / Next.js ───────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+coverage/
+
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env*.local
+!.env.example
+
+# ── Stellar CLI state — CONTAINS SECRET KEYS ─────────────────────────────────
+# The scripts set XDG_CONFIG_HOME to ./.config, so the CLI keeps identities in
+# this project rather than your home directory. That means the admin's 24-word
+# seed phrase is a file inside this repo:
+#
+#     .config/stellar/identity/pact-deployer.toml
+#
+# Never remove these rules. Anyone who obtains that file controls the admin —
+# they can pause the registry, rotate the admin away from you, and settle every
+# dispute in every escrow you ever deployed.
+.config/
+.stellar/
+.soroban/
+# Belt and braces: no identity file escapes, wherever it ends up.
+**/identity/*.toml
+
+# ── Editors / OS ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Vercel ───────────────────────────────────────────────────────────────────
+.vercel
