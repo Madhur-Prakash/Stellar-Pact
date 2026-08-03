@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push makes an in-flight run irrelevant, so don't burn minutes on it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32v1-none
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      # Build before linting or testing the workspace: the integration crate
+      # imports the compiled .wasm at macro-expansion time, so it cannot even
+      # compile until these exist. Plain cargo is enough — the contract spec is
+      # emitted during compilation, so installing the Stellar CLI would only
+      # add minutes to every run.
+      - name: Build contracts to WASM
+        run: cargo build --release --target wasm32v1-none -p registry -p escrow -p reputation
+
+      - name: Lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      # 47 tests: unit suites per contract, plus the end-to-end suite that
+      # exercises deploy_v2 and cross-contract auth against the real WASM.
+      - name: Tests
+        run: cargo test --workspace
+
+      - name: Upload contract artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-wasm
+          path: contracts/target/wasm32v1-none/release/*.wasm
+          if-no-files-found: error
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # scripts/deploy.sh runs this automatically, so a failure here means a
+      # deployment happened without it and the repo now documents contracts that
+      # are no longer the current ones. Nothing else would catch that — the old
+      # contracts keep working, so the drift is otherwise silent.
+      - name: Deployment addresses are in sync
+        working-directory: .
+        run: node scripts/sync-addresses.mjs --check
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      # .env.local is gitignored, so the deployment values are supplied here.
+      # config.test.ts asserts against them — notably that the network
+      # passphrase keeps its semicolon, which a careless parser would truncate
+      # into signatures the network rejects.
+      - name: Tests
+        run: npm run test:run
+        env:
+          NEXT_PUBLIC_STELLAR_NETWORK: testnet
+          NEXT_PUBLIC_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+          NEXT_PUBLIC_REGISTRY_ID: CDF6NQL6ZDLI5B6WYVVDKR6PTOMCXPQHFHCBS5Y5DWQDFGPL4EMVRK3N
+          NEXT_PUBLIC_REPUTATION_ID: CCTRF56HY5G7HNGQZUUWEKX7OI7NYO55PR3XIU4ZZCCJ3CKUXSZIV3LP
+          NEXT_PUBLIC_TOKEN_ID: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
+
+      # next build no longer runs linting in Next 16, which is why lint and
+      # typecheck are separate steps above rather than folded into this one.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_STELLAR_NETWORK: testnet
+          NEXT_PUBLIC_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+          NEXT_PUBLIC_REGISTRY_ID: CDF6NQL6ZDLI5B6WYVVDKR6PTOMCXPQHFHCBS5Y5DWQDFGPL4EMVRK3N
+          NEXT_PUBLIC_REPUTATION_ID: CCTRF56HY5G7HNGQZUUWEKX7OI7NYO55PR3XIU4ZZCCJ3CKUXSZIV3LP
+          NEXT_PUBLIC_TOKEN_ID: CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC

@@ -1,0 +1,16 @@
+[package]
+name = "integration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# Not a contract — this crate exists only to exercise the three real WASM
+# builds against each other. It is excluded from `default-members`, so a fresh
+# clone can run `cargo test` without any build artifacts present.
+[lib]
+doctest = false
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

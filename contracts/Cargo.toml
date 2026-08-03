@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = ["registry", "escrow", "reputation", "integration"]
+
+# `cargo test` from a fresh clone only runs the three contract crates, which
+# need no build artifacts. The `integration` crate imports the compiled .wasm
+# files, so it is opt-in: build first, then `cargo test -p integration`.
+default-members = ["registry", "escrow", "reputation"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Madhur-Prakash/stellar-pact"
+
+[workspace.dependencies]
+soroban-sdk = "27.0.4"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
