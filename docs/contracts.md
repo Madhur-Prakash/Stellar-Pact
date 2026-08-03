@@ -228,6 +228,18 @@ and name and keeps at most two indexed fields.
 
 ## Calling from the CLI
 
+`scripts/deploy.sh` keeps its identities in the project rather than your home
+directory, so point the CLI at them before using an identity it created —
+`pact-deployer`, `pact-client` or `pact-worker`:
+
+```sh
+export XDG_CONFIG_HOME="$PWD/.config"     # from the repository root
+stellar keys ls                            # pact-client, pact-deployer, pact-worker
+```
+
+Without it the CLI reads your global config and reports an unknown identity.
+Substitute your own key for `you` below if you would rather use that one.
+
 ```sh
 # Read the deployment config
 stellar contract invoke --network testnet \

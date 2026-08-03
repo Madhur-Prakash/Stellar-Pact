@@ -159,7 +159,10 @@ final approval writing reputation**.
 
 ## After recording
 
-Upload unlisted to YouTube or Loom, then put the link in:
+Upload to YouTube or Loom, then put the link in:
 
 - the README **Submission** table (`Demo video` row)
 - the challenge submission form
+
+The animated cut already shipped this way — https://youtu.be/YErtSWpK8J8, with
+the source MP4 and the derived assets kept in [`demo/`](demo/).

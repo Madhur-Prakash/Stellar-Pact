@@ -246,6 +246,19 @@ A response for a deal the user has navigated away from is then *structurally
 unable* to overwrite what is on screen, and there is no `setState` inside an
 effect to cascade renders.
 
+**Endpoints follow the network.** `NEXT_PUBLIC_RPC_URL` and its Horizon
+counterpart are optional, and their defaults are selected from
+`NEXT_PUBLIC_STELLAR_NETWORK` rather than hardcoded. Hardcoding testnet URLs
+would mean a futurenet or mainnet deployment silently reading from testnet — the
+configured addresses would resolve to nothing and the app would look broken
+rather than misconfigured.
+
+**The root element carries `suppressHydrationWarning`.** StellarWalletsKit writes
+its theme variables directly onto the document element as its module evaluates,
+giving `<html>` a `style` attribute the server never rendered. The attribute
+suppresses diffing one level deep only, so a genuine mismatch anywhere below
+still surfaces.
+
 ---
 
 ## Deployment order
@@ -260,7 +273,45 @@ That is a cycle, and `scripts/deploy.sh` breaks it:
 3. resolve the native SAC address
 4. deploy registry(admin, hash, reputation, token)
 5. reputation.set_registry(registry)                          ← one-time, closes the loop
+6. sync the new addresses across the repo
 ```
 
 `set_registry` is admin-only and refuses a second call, so the wiring cannot be
 changed after the fact.
+
+Step 6 exists because a stale address is a **silent** failure. Six files carry
+these addresses: two are generated (`deployments/<network>.json`,
+`frontend/.env.local`) and four are written by hand — the committed env example,
+both env blocks in the CI workflow, the root README, and the contract reference.
+If those four are not updated, nothing breaks: the previously deployed contracts
+keep working, so the repo simply documents a deployment that is no longer
+current, and no test or build catches it.
+
+`scripts/sync-addresses.mjs` closes that gap with two mechanisms, because the
+files differ in kind. Env-style files are rewritten **key-anchored** — the key
+names its own value, so no history is needed and it works on a first deploy.
+Prose files need **literal replacement**, since an address there sits inside a
+table cell, a link href or a badge URL with nothing naming it; `deploy.sh`
+snapshots the outgoing record before overwriting it so the old values are known.
+The same script runs in CI as `--check`, which fails the build if the repo and
+the deployment record disagree.
+
+One thing it cannot reach is a hosting provider's environment. Vercel's
+variables live outside the repository, so after a redeploy the registry and
+reputation IDs have to be updated there by hand and the site rebuilt — the
+network name, passphrase and token address are network constants and never
+change.
+
+## Where deployment keys live
+
+The scripts point the Stellar CLI at the project rather than the machine account
+by setting `XDG_CONFIG_HOME` to `./.config`, so identities land in
+`.config/stellar/identity/<name>.toml`. A checkout therefore carries its own
+deployer and nothing is written to a shared home directory. Export the variable
+yourself to opt back out.
+
+That file holds the admin's 24-word seed phrase in plaintext. It is gitignored —
+`.config/` plus a `**/identity/*.toml` catch-all — but a gitignore only stops
+git, not a zip or a synced folder. Whoever holds it can pause the registry,
+rotate the admin away, and settle every dispute in every escrow ever deployed,
+and there is no recovery path.

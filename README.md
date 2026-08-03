@@ -539,14 +539,31 @@ wallet is waiting".
 The app is **already deployed at https://stellar-pact-pi.vercel.app** — you only
 need this section to run your own.
 
-The app is a static Next.js build; any host works. On Vercel, set the root
-directory to `frontend` and add the four `NEXT_PUBLIC_*` variables from
-[`frontend/.env.example`](frontend/.env.example) — they are read at build time.
+The app is a static Next.js build; any host works. On Vercel, set the **root
+directory to `frontend`** — the repository root is a Cargo workspace, so the
+build fails to find a Next app without it — then add the five required
+`NEXT_PUBLIC_*` variables from [`frontend/.env.example`](frontend/.env.example).
 
 ```sh
 npm i -g vercel
 cd frontend && vercel --prod
 ```
+
+Two things about those variables. They are inlined at **build** time, so adding
+one to an existing project does nothing until you redeploy — a site showing the
+"StellarPact does not know where its contracts are" screen is almost always
+this. And paste the passphrase raw: quoting it would embed the quote characters
+into the string, and a wrong passphrase makes the network reject every
+signature.
+
+None of them are secret; every `NEXT_PUBLIC_*` value ships to the browser by
+design. The admin key is never involved.
+
+**After redeploying the contracts,** exactly two of them change —
+`NEXT_PUBLIC_REGISTRY_ID` and `NEXT_PUBLIC_REPUTATION_ID` — and the host needs a
+rebuild to pick them up. `scripts/sync-addresses.mjs` updates the repository but
+cannot reach a hosting provider's environment, so this is the one place drift
+still has to be handled by hand.
 
 ---
 
