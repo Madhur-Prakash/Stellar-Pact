@@ -1,0 +1,126 @@
+@import 'tailwindcss';
+
+/*
+ * StellarPact — "ledger under glass".
+ *
+ * The palette carries meaning rather than mood: every quantity on screen is
+ * either money still frozen in a contract or money that has already moved, and
+ * those two states get their own colour. Ice for held, gold for paid. A third
+ * accent is reserved for the paths where a deal went wrong, so rust appearing
+ * anywhere on the page means something is genuinely off.
+ */
+@theme {
+  --color-ink: #090e15;
+  --color-slate: #0f1822;
+  --color-panel: #14202c;
+  --color-line: #1e2d3d;
+  --color-line-soft: #172432;
+
+  --color-held: #8fb8dc;
+  --color-held-deep: #33536f;
+  --color-paid: #e0a93f;
+  --color-paid-deep: #6b4d16;
+  --color-risk: #c2604a;
+
+  --color-text: #e6edf5;
+  --color-muted: #7f92a6;
+  --color-faint: #4d5f72;
+
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SFMono-Regular', monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-text);
+    font-family: var(--font-display);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* Every exact on-chain quantity sets in mono: amounts, addresses, hashes,
+     ledger numbers. If it came off the chain, it looks like it. */
+  .tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+    font-weight: 600;
+  }
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-held);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-held);
+    color: var(--color-ink);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+}
+
+@utility bar-grow {
+  /* The one orchestrated motion in the app: the value bar growing as money is
+     released. Everything else stays still. */
+  transition: width 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@utility tape-enter {
+  animation: tape-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@utility pulse-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes tape-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
