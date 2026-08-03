@@ -7,7 +7,7 @@ Amounts are `i128` **stroops** (1 XLM = 10,000,000 stroops). Timestamps are
 
 ---
 
-## RegistryContract 
+## RegistryContract
 
 Factory, index, and the single source of admin authority.
 
