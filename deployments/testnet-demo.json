@@ -1,0 +1,14 @@
+{
+  "network": "testnet",
+  "escrow": "CC5BNJ4B5KBZGIBUGWNNSJHYCWBU63UODXUJDVPH2CBSC7FVMSVTZ6XH",
+  "client": "GC5TEJWFS4TA34JLS4EGVW2X2JHYPOKTD7VNW4CFHFPKHRY3TJHGTWFH",
+  "worker": "GCPCCXJGBEKDMWI5YOJJ7J6N3GFO4IHMXPBP33KQEIMYO3CFLWYWISDP",
+  "transactions": {
+    "create_deal": "427eb840798c94028b2300d193fac9de17e4cfcf408f95a88798dc631f6f2220",
+    "fund": "8f6b086ba56b9809a955906e9cf8d222454508bcc85e17be0ded0a1e8b1c17e0",
+    "submit_milestone_1": "3a261c29d03faaa70b2fd8d2574036adf7dd761c20c2e4cbeaee808b3618b642",
+    "approve_milestone_1": "62084b0b79924084b9d0945689141c99a3ec5a26fc3ee7edd2c93c6c7dbcb50f",
+    "submit_milestone_2": "cc7483130fa93c7a02c736fd13e00d51c4007de89ae365c61f5430b99be24239",
+    "approve_milestone_2": "5304d3aec519b36fd596a38a6a7c1c5e7430a53966facd6ec7bec52071407e52"
+  }
+}
